@@ -8,7 +8,8 @@ const
   ___OPL3OUT_UNIT_DATA_START___: Dword = 0;
 {$ENDIF}
 
-procedure opl2out(reg,data: Word);
+procedure opl2out_proc(reg,data: Word);
+procedure opl2lpt_proc(reg,data: Word);
 procedure opl3out_proc(reg,data: Word);
 procedure opl3exp(data: Word);
 
@@ -16,12 +17,15 @@ type
   tOPL3OUT_proc = procedure(reg,data: Word);
 
 const
+  opl2lpt: tOPL3OUT_proc = opl2lpt_proc;
+  opl2out: tOPL3OUT_proc = opl2out_proc;
   opl3out: tOPL3OUT_proc = opl3out_proc;
 
 {$IFDEF GO32V2}
 
 const
   opl3port: Word = 0;
+  opl3dual: Word = 0;
   opl_latency: Byte = 0;
 
 function detect_OPL3: Boolean;
@@ -78,7 +82,57 @@ procedure  ___OPL3OUT_IRQ_CODE_START___; begin end;
 var
   _opl_regs_cache: array[WORD] of Word;
 
-procedure opl2out(reg,data: Word);
+procedure opl2lpt_proc(reg,data: Word);
+  var
+    lptport : Word;
+begin
+
+  If (_opl_regs_cache[reg] <> data) then
+    _opl_regs_cache[reg] := data
+  else EXIT;
+
+  If (reg > $100) then
+    begin
+      If (opl3dual <> 0) then
+            lptport := opl3dual
+      else EXIT;
+        end
+  else lptport := opl3port;
+
+  asm
+        mov     ax,reg
+        mov     dx,word ptr [lptport]
+        out     dx,al
+        add     dx,2
+        mov     al,13
+        out     dx,al
+        mov     al,9
+        out     dx,al
+        mov     al,13
+        out     dx,al
+        sub     dx,2
+        mov     ecx,6
+@@2:    in      al,dx
+        loop    @@2
+
+        mov     ax,data
+        out     dx,al
+        add     dx,2
+        mov     al,12
+        out     dx,al
+        mov     al,8
+        out     dx,al
+        mov     al,12
+        out     dx,al
+        sub     dx,2
+        mov     ecx,36
+@@3:    in      al,dx
+        loop    @@3
+@@4:
+  end;
+end;
+
+procedure opl2out_proc(reg,data: Word);
 begin
   If (_opl_regs_cache[reg] <> data) then
     _opl_regs_cache[reg] := data
@@ -168,9 +222,9 @@ begin
         push    dword 80h
         push    dword 04h
         push    dword 60h
-        call    opl2out
+        call    opl2out_proc
         call    WaitRetrace
-        call    opl2out
+        call    opl2out_proc
         call    WaitRetrace
         mov     dx,opl3port
         in      al,dx
@@ -180,9 +234,9 @@ begin
         push    dword 21h
         push    dword 02h
         push    dword 0ffh
-        call    opl2out
+        call    opl2out_proc
         call    WaitRetrace
-        call    opl2out
+        call    opl2out_proc
         call    WaitRetrace
         mov     dx,opl3port
         in      al,dx
@@ -194,9 +248,9 @@ begin
         push    dword 80h
         push    dword 04h
         push    dword 60h
-        call    opl2out
+        call    opl2out_proc
         call    WaitRetrace
-        call    opl2out
+        call    opl2out_proc
         call    WaitRetrace
         mov     dx,opl3port
         in      al,dx

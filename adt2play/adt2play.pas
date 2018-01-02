@@ -160,6 +160,31 @@ begin
     If (Lower(_ParamStr[temp]) = '/latency') then
       opl3out := opl2out;
 
+  For temp := 1 to ParamCount do
+    begin
+                If (Lower(_ParamStr[temp]) = '/lpt1') then
+                  begin
+                        if((opl3port = $3bc) or (opl3port = $278)) then
+                          opl3stereo :=$378
+                        else opl3port := $378;
+                        opl3out := opl2lpt;
+                  end;
+                If (Lower(_ParamStr[temp]) = '/lpt2') then
+                  begin
+                        if((opl3port = $378) or (opl3port = $3bc)) then
+                          opl3stereo :=$278
+                        else opl3port := $278;
+                        opl3out := opl2lpt;
+                  end;
+                If (Lower(_ParamStr[temp]) = '/lpt3') then
+                  begin
+                        if((opl3port = $378) or (opl3port = $278)) then
+                          opl3stereo :=$3bc
+                        else opl3port := $3bc;
+                        opl3out := opl2lpt;
+                  end;
+        end;
+
   index := 0;
   If (ParamCount = 0) then
     begin
@@ -170,6 +195,7 @@ begin
       CWriteLn('  /jukebox    play modules w/ no repeat',$07,0);
       CWriteLn('  /gfx        graphical interface',$07,0);
       CWriteLn('  /latency    compatibility mode for OPL3 latency',$07,0);
+      CWriteLn('  /lpt(1|2|3) OPL2LPT support',$07,0);
       HALT;
     end;
 

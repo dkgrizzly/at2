@@ -248,11 +248,22 @@ begin { MAIN }
 
   index := 1;
   If (opl3port <> 0) then
-    If (opl3port < $100) then
-      WriteLn('OPL3 interface base address forced to ',ExpStrL(Num2str(opl3port,16),2,'0'),'h')
-    else If (opl3port < $1000) then
-           WriteLn('OPL3 interface base address forced to ',ExpStrL(Num2str(opl3port,16),3,'0'),'h')
-         else WriteLn('OPL3 interface base address forced to ',ExpStrL(Num2str(opl3port,16),4,'0'),'h')
+    begin
+      If ((opl3port = $378) OR (opl3port = $278) OR (opl3port = $3BC)) then
+        begin
+          if(opl3dual <> 0) then
+            WriteLn('Dual OPL2LPT mode has been enabled.')
+          else
+            WriteLn('Single OPL2LPT mode has been enabled.');
+          opl3out := opl2lpt;
+          opl2out := opl2lpt;
+        end;
+      If (opl3port < $100) then
+        WriteLn('OPL3 interface base address forced to ',ExpStrL(Num2str(opl3port,16),2,'0'),'h')
+      else If (opl3port < $1000) then
+             WriteLn('OPL3 interface base address forced to ',ExpStrL(Num2str(opl3port,16),3,'0'),'h')
+           else WriteLn('OPL3 interface base address forced to ',ExpStrL(Num2str(opl3port,16),4,'0'),'h')
+    end
   else begin
          opl3detected := FALSE;
          Repeat

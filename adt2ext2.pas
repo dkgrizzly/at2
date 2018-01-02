@@ -689,6 +689,9 @@ begin
   opl3port :=
     check_number('adlib_port',16,1,$0ffff,opl3port);
 
+  opl3dual :=
+    check_number('dual_port',16,1,$0ffff,opl3dual);
+
   typematic_rate :=
     check_number('typematic_rate',10,0,31,typematic_rate);
 

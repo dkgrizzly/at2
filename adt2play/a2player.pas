@@ -15,6 +15,7 @@ const
 
 const
   opl3port: Word = $388;
+  opl3stereo: Word = 0;
   error_code: Integer = 0;
   current_order: Byte = 0;
   current_pattern: Byte = 0;
@@ -87,6 +88,7 @@ procedure get_chunk(pattern,line,chan: Byte; var chunk: tCHUNK);
 procedure put_chunk(pattern,line,chan: Byte; chunk: tCHUNK);
 procedure count_order(var entries: Byte);
 procedure timer_poll_proc;
+procedure opl2lpt_proc(reg,data: Word);
 procedure opl2out_proc(reg,data: Word);
 procedure opl3out_proc(reg,data: Word);
 procedure opl3exp_proc(data: Word);
@@ -103,6 +105,7 @@ type
   tOPLEXP_proc = procedure(data: Word);
 
 const
+  opl2lpt: tOPLOUT_proc = opl2lpt_proc;
   opl2out: tOPLOUT_proc = opl2out_proc;
   opl3out: tOPLOUT_proc = opl3out_proc;
   opl3exp: tOPLEXP_proc = opl3exp_proc;
@@ -240,6 +243,56 @@ var
 
 var
   _opl_regs_cache: array[WORD] of Word;
+
+procedure opl2lpt_proc(reg,data: Word);
+  var
+    lptport : Word;
+begin
+
+  If (_opl_regs_cache[reg] <> data) then
+    _opl_regs_cache[reg] := data
+  else EXIT;
+
+  If (reg > $100) then
+    begin
+      If (opl3stereo <> 0) then
+            lptport := opl3stereo
+      else EXIT;
+        end
+  else lptport := opl3port;
+
+  asm
+        mov     ax,reg
+        mov     dx,word ptr [lptport]
+        out     dx,al
+        add     dx,2
+        mov     al,13
+        out     dx,al
+        mov     al,9
+        out     dx,al
+        mov     al,13
+        out     dx,al
+        sub     dx,2
+        mov     ecx,6
+@@2:    in      al,dx
+        loop    @@2
+
+        mov     ax,data
+        out     dx,al
+        add     dx,2
+        mov     al,12
+        out     dx,al
+        mov     al,8
+        out     dx,al
+        mov     al,12
+        out     dx,al
+        sub     dx,2
+        mov     ecx,36
+@@3:    in      al,dx
+        loop    @@3
+@@4:
+  end;
+end;
 
 procedure opl2out_proc(reg,data: Word);
 begin
